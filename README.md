@@ -41,6 +41,7 @@ banco está vazio (veja [Dados fake pré-carregados](#dados-fake-pré-carregados
 - **morgan** — log de requisições HTTP no console
 - **nodemon** (dependência de desenvolvimento) — reinício automático do servidor durante o
   desenvolvimento
+- **dotenv** — carregamento de variáveis de ambiente a partir de um arquivo `.env`
 
 A autenticação é real: senhas com hash (bcrypt) e sessões via JWT assinado.
 
@@ -93,6 +94,24 @@ npm start
 # subir em modo desenvolvimento (reinício automático com nodemon)
 npm run dev
 ```
+
+Para configurar variáveis localmente, copie `.env.example` para `.env` e ajuste os valores quando
+necessário. O arquivo `.env` não deve ser versionado.
+
+### Testes automatizados
+
+Os testes usam Mocha, SuperTest e Chai. Eles cobrem o fluxo de login do administrador, cadastro e
+matrícula de um aluno, login do aluno e entrega de um trabalho. Os dados do cenário ficam em
+`test/fixtures/test-data.json`, e os logins são reutilizados pelos helpers em `test/helpers`.
+
+Com o MongoDB em execução, rode:
+
+```bash
+npm test
+```
+
+Os mesmos testes são executados automaticamente em cada push e pull request pelo workflow do
+GitHub Actions, usando um serviço MongoDB dedicado.
 
 O servidor sobe por padrão em `http://localhost:3000` (pode ser alterado com a variável de
 ambiente `PORT`).
