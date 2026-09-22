@@ -17,18 +17,14 @@ describe('Fluxo de autenticação e entrega de trabalho', () => {
     matricula: `${testData.aluno.matricula}-${identificador}`,
   };
   const trabalho = { ...testData.trabalho };
-  let adminToken;
   let alunoId;
-
-  before(async () => {
-    adminToken = await loginAsAdmin(app, testData.admin);
-  });
 
   after(async () => {
     await mongoose.connection.close();
   });
 
-  it('deve cadastrar um aluno usando o token de administrador', async () => {
+  it('deve executar o fluxo completo de administrador e aluno', async () => {
+    const adminToken = await loginAsAdmin(app, testData.admin);
     const resposta = await request(app)
       .post('/api/admin/alunos')
       .set('Authorization', `Bearer ${adminToken}`)
@@ -39,33 +35,25 @@ describe('Fluxo de autenticação e entrega de trabalho', () => {
     expect(resposta.body).to.not.have.property('senha');
     alunoId = resposta.body.id;
     aluno.id = alunoId;
-  });
 
-  it('deve matricular o aluno na disciplina do trabalho', async () => {
-    const resposta = await request(app)
+    const matricula = await request(app)
       .post(`/api/admin/disciplinas/${testData.disciplinaId}/matriculas`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ alunoId });
 
-    expect(resposta.status).to.equal(201);
-    expect(resposta.body).to.include({ alunoId, disciplinaId: testData.disciplinaId });
-  });
+    expect(matricula.status).to.equal(201);
+    expect(matricula.body).to.include({ alunoId, disciplinaId: testData.disciplinaId });
 
-  it('deve fazer login como aluno usando o helper de autenticação', async () => {
     const alunoToken = await loginAsAluno(app, aluno);
-
     expect(alunoToken).to.be.a('string').and.not.empty;
-  });
 
-  it('deve registrar a entrega de um trabalho como aluno', async () => {
-    const alunoToken = await loginAsAluno(app, aluno);
-    const resposta = await request(app)
+    const entrega = await request(app)
       .post(`/api/alunos/${alunoId}/trabalhos`)
       .set('Authorization', `Bearer ${alunoToken}`)
       .send({ ...trabalho, disciplinaId: testData.disciplinaId });
 
-    expect(resposta.status).to.equal(201);
-    expect(resposta.body).to.include({
+    expect(entrega.status).to.equal(201);
+    expect(entrega.body).to.include({
       alunoId,
       disciplinaId: testData.disciplinaId,
       titulo: trabalho.titulo,
